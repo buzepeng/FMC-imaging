@@ -209,14 +209,14 @@ int main(){
 
     HilbertBandPassFilter hf(fl, fh);
     
-    signals = hf.read_data("/home/hilbert/data/input_data.txt");
+    signals = hf.read_data("../data/input_data.txt");
     std::cout<<"Signal read complete!"<<std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     results = hf.filter(signals);
     auto end = std::chrono::high_resolution_clock::now();
     std::cout<<"Result compute complete! Time spend: " << std::chrono::duration<float>(end - start).count()<<std::endl;
-    hf.save_result(results, "/home/hilbert/data/output_data.txt");
+    hf.save_result(results, "../data/output_data.txt");
 
 	return 0;
 }
