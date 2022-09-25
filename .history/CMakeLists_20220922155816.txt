@@ -4,8 +4,7 @@ project(hilbert LANGUAGES CUDA CXX)
 
 find_package(CUDA REQUIRED)
 
-# cuda_add_executable(hilbert src/FMCImaging.cu OPTIONS -g -G --std=c++11 --expt-extended-lambda)
-cuda_add_executable(hilbert src/FMCImaging.cu OPTIONS -O2 --std=c++11 --expt-extended-lambda)
+cuda_add_executable(hilbert src/FMCImaging.cu OPTIONS -g -G --std=c++11 --expt-extended-lambda)
 target_include_directories(hilbert PRIVATE src)
 target_link_libraries(hilbert cufft)
 set_target_properties(
