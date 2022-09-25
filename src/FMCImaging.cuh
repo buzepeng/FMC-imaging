@@ -57,41 +57,6 @@ __global__ void transposeCoalesced(short *idata, short *odata, int row, int col)
     }
 }
 
-// __global__ void Imaging(float *offLineFmcMat, short *Tof, cufftComplex *FmcMatHilbert, float* TfmImage, float MindB, int WaveNum, int iWaveLength, int  WaveLength, int row_tof, int col_tof, int NZ, int NX){
-//     int ix = blockDim.x*blockIdx.x+threadIdx.x;
-//     int iy = blockDim.y*blockIdx.y+threadIdx.y;
-//     int tid = threadIdx.y*TILEW+threadIdx.x;
-//     int idx = iy*NX+ix;
-//     extern __shared__ short s_buffer[];
-//     short *s_offLineFmc0 = &s_buffer[0], *s_offLineFmc1 = &s_buffer[WaveNum];
-//     for(int i = 0;i<WaveNum;i = i+TILEW*TILEH){
-//         int s = tid+i;
-//         if(s<WaveNum){
-//             s_offLineFmc0[s] = short(offLineFmcMat[s*iWaveLength])-1;
-//             s_offLineFmc1[s] = short(offLineFmcMat[s*iWaveLength+1])-1;
-//         }
-//     }
-//     __syncthreads();
-    
-//     if(iy<NZ && ix<NX){
-//         float real = 0, imag = 0;
-//         for(int s = 0; s < WaveNum; s++){
-//             // int tIndex = int(offLineFmcMat[s*iWaveLength]-1), rIndex = int(offLineFmcMat[s*iWaveLength+1]-1);
-//             int tIndex = int(s_offLineFmc0[s]), rIndex = int(s_offLineFmc1[s]);
-//             int trTofIndex = int(Tof[tIndex*col_tof+idx]+Tof[rIndex*col_tof+idx]);
-//             // if(s*WaveLength+trTofIndex-1>=WaveNum*WaveLength){
-//             //     printf("illegal address\n");
-//             // }
-//             float val1 = FmcMatHilbert[s*WaveLength+trTofIndex-1].x;
-//             float val2 = FmcMatHilbert[s*WaveLength+trTofIndex-1].y;
-
-//             real += val1;
-//             imag += val2;
-//         }
-//         TfmImage[idx] = sqrtf(powf(real, 2)+powf(imag, 2));
-//     }
-// }
-
 struct thrust_imaging{
     float *offLineFmc;
     short *Tof;
