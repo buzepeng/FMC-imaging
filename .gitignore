@@ -1,5 +1,5 @@
-build/*
 .vscode/
+.history/
 data/*
 test.cu
 test.py
