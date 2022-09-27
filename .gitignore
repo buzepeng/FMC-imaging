@@ -1,5 +1,6 @@
 .vscode/
 .history/
+build/
 data/*
 test.cu
 test.py
