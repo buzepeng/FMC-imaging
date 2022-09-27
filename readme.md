@@ -1,12 +1,7 @@
 # 希尔伯特滤波
-用cuda实现信号的带通滤波并进行希尔伯特变换，在jupyter notebook中验证滤波的结果
+用cuda实现2048*4000维信号的频域带通滤波，并进行了希尔伯特变换，最后用全聚焦成像算法生成图像，在jupyter notebook中验证成像的结果。单帧成像cpu用时40s左右，gpu用时28ms左右。
 
-# cuda程序编译及运行
-运行jupyter notebook中的生成测试数据代码块生成测试数据
+# cuda计算结果
+利用cuda计算得到的成像结果如图：
 
-新建build目录，用cmake进行编译
-```
-mkdir build && cd build && cmake .. && make
-
-./hilbert
-```
+![FMC](img/result.png)

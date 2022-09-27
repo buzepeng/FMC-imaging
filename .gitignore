@@ -1,7 +1,7 @@
 .vscode/
 .history/
 build/
-data/*
-test.cu
-test.py
-test.cpp
+data/
+/*.cu
+/*.py
+/*.cpp
