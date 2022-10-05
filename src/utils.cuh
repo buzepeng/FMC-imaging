@@ -71,7 +71,8 @@ struct thrust_imaging{
         complex_sum.x = 0;
         complex_sum.y = 0;
         for(int s = 0;s<WaveNum;s++){
-            int tIndex = int(offLineFmc[iWaveLength*s]-1), rIndex = int(offLineFmc[iWaveLength*s+1]-1);
+            // int tIndex = int(offLineFmc[iWaveLength*s]-1), rIndex = int(offLineFmc[iWaveLength*s+1]-1);
+            int tIndex = int(s/32), rIndex = (s+1)%32+int((s+1)/32);
             int trTofIndex = int(Tof[tIndex*col_tof+i]+Tof[rIndex*col_tof+i]), fmc_ind = s*WaveLength+trTofIndex-1;
             cufftComplex temp = FmcMatHilbert[fmc_ind];
             complex_sum = complex_sum + temp;

@@ -30,8 +30,8 @@ FmcImaging::FmcImaging(int _WaveNum, int _WaveLength, int _iWaveLength, int _row
     int idist = iWaveLength;
     int ostride=1;
     int odist = WaveLength;
-    int inembed[1];
-    int onembed[1];
+    int inembed[2];
+    int onembed[2];
     inembed[0]= iWaveLength;  onembed[0]=WaveLength;
     inembed[1] = WaveNum; onembed[0] = WaveNum;
 
