@@ -9,14 +9,11 @@
 FmcImaging::FmcImaging(int _WaveNum, int _WaveLength, int _iWaveLength, int _row_tof, int _col_tof, int _NZ, int _NX, int _taps):WaveNum(_WaveNum),WaveLength(_WaveLength),iWaveLength(_iWaveLength),row_tof(_row_tof),col_tof(_col_tof),NZ(_NZ),NX(_NX),taps(_taps)
 {
     //alloc memory
-    h_iTof = (short*)malloc(row_tof*col_tof*sizeof(short));
-
-    cudaMallocHost((void **)&h_offLineFmc, WaveNum*iWaveLength*sizeof(float));
-
     cudaMalloc((void**) &d_iTof, row_tof * col_tof * sizeof(short));
 
     cudaMalloc((void **)&d_f_filter, WaveLength*sizeof(cufftComplex));
-    cudaMalloc((void**) &d_offLineFmc, iWaveLength * WaveNum *sizeof(float));
+    cudaMalloc((void**) &d_offLineFmc_char, iWaveLength * WaveNum *sizeof(char));
+    cudaMalloc((void**) &d_offLineFmc_float, iWaveLength * WaveNum *sizeof(float));
     cudaMalloc((void**) &d_TfmImage, NZ * NX * sizeof(float));
 
     cudaMalloc((void**) &d_Hilbert, WaveLength * sizeof(cufftComplex));
@@ -60,10 +57,10 @@ FmcImaging::FmcImaging(int _WaveNum, int _WaveLength, int _iWaveLength, int _row
 }
 
 FmcImaging::~FmcImaging(){
-    cudaFreeHost(h_offLineFmc);
 
     cudaFree(d_iTof);
-    cudaFree(d_offLineFmc);
+    cudaFree(d_offLineFmc_char);
+    cudaFree(d_offLineFmc_float);
     cudaFree(d_TfmImage);
     cudaFree(d_f_filter);
     cudaFree(d_Hilbert);
@@ -71,6 +68,11 @@ FmcImaging::~FmcImaging(){
 
     cufftDestroy(planForward);
     cufftDestroy(planInverse);
+}
+
+void FmcImaging::copy_FMC(char* offLineFmc, char* offLineFmc_char, float* offLineFmc_float){
+    cudaMemcpy(offLineFmc_char, offLineFmc, iWaveLength*WaveNum, cudaMemcpyHostToDevice);
+    thrust::transform(thrust::device, offLineFmc_char, offLineFmc_char+iWaveLength*WaveNum, offLineFmc_float, [=]__device__(char val){return (float)val;});
 }
 
 void FmcImaging::transpose(short *iTof, int row_tof, int col_tof){
@@ -115,7 +117,7 @@ void FmcImaging::hilbert_transform(cufftComplex *f_offLineFmc, cufftComplex* Hil
     cufftExecC2C(planInverse, f_offLineFmc, f_offLineFmc, CUFFT_INVERSE);
 }
 
-void FmcImaging::imaging(float* offLineFmc, short* Tof, cufftComplex* FmcMatHilbert, float* TfmImage, float MindB){
+void FmcImaging::imaging(char* offLineFmc, short* Tof, cufftComplex* FmcMatHilbert, float* TfmImage, float MindB){
     thrust::transform(thrust::device, thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(NX*NZ), TfmImage, thrust_imaging(offLineFmc, Tof, FmcMatHilbert, WaveNum, WaveLength, iWaveLength, col_tof));
     float h_MaxInTfmImage, *d_MaxInTfmImage = thrust::max_element(thrust::device, TfmImage, TfmImage+NX*NZ);
     cudaMemcpy(&h_MaxInTfmImage, d_MaxInTfmImage, sizeof(float), cudaMemcpyDeviceToHost);
@@ -124,7 +126,7 @@ void FmcImaging::imaging(float* offLineFmc, short* Tof, cufftComplex* FmcMatHilb
     });
 }
 
-void FmcImaging::read_FMC(std::string filepath, float *input, int row, int col){
+void FmcImaging::read_FMC(std::string filepath, char *input, int row, int col){
 
     std::ifstream fp_input;
     fp_input.open(filepath, std::ios::in);
@@ -139,8 +141,7 @@ void FmcImaging::read_FMC(std::string filepath, float *input, int row, int col){
         std::string number;
         std::istringstream readstr(line);
         while(getline(readstr, number, ',')){
-            input[element_num++] = std::stof(number);
-
+            input[element_num++] = std::stoi(number);
             if(element_num>=row*col){
                 exit = true;
                 break;

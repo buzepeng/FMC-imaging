@@ -10,31 +10,30 @@
 #define TILEW 16
 #define TILEH 16
 
-__device__ cufftComplex operator * (cufftComplex a, cufftComplex b){
+inline __device__ cufftComplex operator * (const cufftComplex &a, const cufftComplex &b){
     cufftComplex res;
     res.x = (a.x*b.x - a.y*b.y);
     res.y = (a.x*b.y + a.y*b.x);
     return res;
 }
-__device__ cufftComplex operator * (cufftComplex a, float b){
+inline __device__ cufftComplex operator * (const cufftComplex &a, float b){
     cufftComplex res;
     res.x = a.x*b;
     res.y = a.y*b;
     return res;
 }
-__device__ cufftComplex operator / (cufftComplex a, float b){
+inline __device__ cufftComplex operator / (const cufftComplex &a, float b){
     cufftComplex res;
     res.x = a.x/b;
     res.y = a.y/b;
     return res;
 }
-__device__ cufftComplex operator + (cufftComplex a, cufftComplex b){
-    cufftComplex res;
-    res.x = a.x+b.x;
-    res.y = a.y+b.y;
-    return res;
-}
 
+inline __device__ cufftComplex operator += (cufftComplex &a, const cufftComplex &b){
+    a.x += b.x;
+    a.y += b.y;
+    return a;
+}
 __global__ void frequency_filtering_kernel(cufftComplex* signals, cufftComplex* filter, cufftComplex *HilbertMat, int WaveNum, int WaveLength){
     int ix = blockDim.x*blockIdx.x+threadIdx.x;
     int iy = blockDim.y*blockIdx.y+threadIdx.y;
@@ -59,23 +58,23 @@ __global__ void transposeCoalesced(short *idata, short *odata, int row, int col)
 }
 
 struct thrust_imaging{
-    float *offLineFmc;
+    char *offLineFmc;
     short *Tof;
     cufftComplex *FmcMatHilbert;
     int WaveNum, WaveLength, iWaveLength, col_tof;
 
-    thrust_imaging(float *_offLineFmc, short *_Tof, cufftComplex *_FmcMatHilbert, int _WaveNum, int _WaveLength,int _iWaveLength, int _col_tof):offLineFmc(_offLineFmc), Tof(_Tof), FmcMatHilbert(_FmcMatHilbert), WaveNum(_WaveNum), WaveLength(_WaveLength), iWaveLength(_iWaveLength), col_tof(_col_tof){};
+    thrust_imaging(char *_offLineFmc, short *_Tof, cufftComplex *_FmcMatHilbert, int _WaveNum, int _WaveLength,int _iWaveLength, int _col_tof):offLineFmc(_offLineFmc), Tof(_Tof), FmcMatHilbert(_FmcMatHilbert), WaveNum(_WaveNum), WaveLength(_WaveLength), iWaveLength(_iWaveLength), col_tof(_col_tof){};
     __device__
     float operator()(int i){
         cufftComplex complex_sum;
         complex_sum.x = 0;
         complex_sum.y = 0;
         for(int s = 0;s<WaveNum;s++){
-            // int tIndex = int(offLineFmc[iWaveLength*s]-1), rIndex = int(offLineFmc[iWaveLength*s+1]-1);
-            int tIndex = int(s/32), rIndex = (s+1)%32+int((s+1)/32);
+            int tIndex = int(offLineFmc[iWaveLength*s])-1, rIndex = int(offLineFmc[iWaveLength*s+1])-1;
+
             int trTofIndex = int(Tof[tIndex*col_tof+i]+Tof[rIndex*col_tof+i]), fmc_ind = s*WaveLength+trTofIndex-1;
             cufftComplex temp = FmcMatHilbert[fmc_ind];
-            complex_sum = complex_sum + temp;
+            complex_sum += temp;
         }
         return cuCabsf(complex_sum);
     }
